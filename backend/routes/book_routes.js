@@ -39,7 +39,7 @@
  * @router PUT /api/books/:id
  * @brief Actualiza los metadatos de un libro específico.
  */
- router.put('/:id', validatorBookUpdate, bookController.updateMetadata);
+ router.put('/:id', validateBookUpdate, bookController.updateMetadata);
  
  /**
   * @route DELETE /api/books/:id
