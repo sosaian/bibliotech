@@ -68,6 +68,19 @@
          tdReading.appendChild(linkDownload);
  
          const tdActions = document.createElement('td');
+         
+         const btnEdit = document.createElement('button');
+         // Le pongo w3-tiny y w3-round para que sea idéntico a tus otros botones
+         btnEdit.className = 'w3-button w3-orange w3-text-white w3-tiny w3-round w3-margin-right';
+         btnEdit.textContent = 'Editar';
+         btnEdit.addEventListener('click', () => 
+         {
+             showEditBookModal(b, (updatedData) => {
+                 updateBook(b.id, updatedData);
+             });
+         });
+         tdActions.appendChild(btnEdit);
+
          const btnDelete = document.createElement('button');
          btnDelete.className = 'w3-button w3-red w3-tiny w3-round';
          btnDelete.textContent = 'Borrar';
@@ -100,6 +113,26 @@
          showModal('Error', error.message);
      }
  }
+
+ /**
+ * @brief Envía la solicitud PUT para actualizar los metadatos de un libro.
+ * @param {number} bookId ID del libro a editar.
+ * @param {Object} bookData Objeto con { title, author, category, pages }.
+ */
+ async function updateBook(bookId, bookData) {
+     try {
+        // apiService.request ya maneja el token y ataja errores de red automáticamente
+        const response = await apiService.request(`/books/${bookId}`, 'PUT', bookData);
+        
+        // Usamos la alerta global segura del proyecto
+        showModal('Éxito', response.message || 'Documento actualizado correctamente');
+        
+        // Recargamos la tabla para que el usuario vea los datos nuevos instantáneamente
+        loadBooks();
+     }  catch (error) {
+        showModal('Error al actualizar', error.message);
+     }
+ }
  
  const uploadForm = document.getElementById('uploadForm');
  
@@ -107,39 +140,32 @@
  {
      uploadForm.addEventListener('submit', async (e) => 
      {
-        /**
-         * @see Cancela el evento si este es cancelable, sin detener el 
-         * resto del funcionamiento del evento, es decir, puede ser llamado 
-         * de nuevo. En este caso evita que se envíe el formulario al presionar
-         * el botón de tipo "submit", para poder trabajar previamente con el contenido
-         * del formulario representado por el objeto de tipo FormData()
-         */ 
-        e.preventDefault();
+         e.preventDefault();
          
-        /**
-         * @note Objeto FormData: Esencial para enviar archivos binarios al backend.
-         * Codifica automáticamente los campos en el formato 'multipart/form-data'.
-         */
-        const formData = new FormData();
-        formData.append('title', document.getElementById('title').value);
-        formData.append('author', document.getElementById('author').value);
-        formData.append('category', document.getElementById('category').value);
-        formData.append('pages', document.getElementById('pages').value);
-        
-        // files[0] accede al binario crudo del archivo seleccionado en el input de tipo file
-        formData.append('pdfFile', document.getElementById('pdfFile').files[0]);
-
-        try 
-        {
-            // Pasamos true como cuarto parámetro para indicar que enviamos FormData
-            await apiService.request('/books/upload', 'POST', formData, true);
-            showModal('Éxito', 'Documento guardado e indexado correctamente.');
-            uploadForm.reset();
-            loadBooks();
-        } 
-        catch (error) 
-        {
-            showModal('Error al cargar', error.message);
-        }
+         /**
+          * @note Objeto FormData: Esencial para enviar archivos binarios al backend.
+          * Codifica automáticamente los campos en el formato 'multipart/form-data'.
+          */
+         const formData = new FormData();
+         formData.append('title', document.getElementById('title').value);
+         formData.append('author', document.getElementById('author').value);
+         formData.append('category', document.getElementById('category').value);
+         formData.append('pages', document.getElementById('pages').value);
+         
+         // files[0] accede al binario crudo del archivo seleccionado en el input de tipo file
+         formData.append('pdfFile', document.getElementById('pdfFile').files[0]);
+ 
+         try 
+         {
+             // Pasamos true como cuarto parámetro para indicar que enviamos FormData
+             await apiService.request('/books/upload', 'POST', formData, true);
+             showModal('Éxito', 'Documento guardado e indexado correctamente.');
+             uploadForm.reset();
+             loadBooks();
+         } 
+         catch (error) 
+         {
+             showModal('Error al cargar', error.message);
+         }
      });
  }
