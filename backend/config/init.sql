@@ -252,5 +252,23 @@ BEGIN
     WHERE id = p_book_id and user_id = p_user_id;
 END //
 
+/**
+ * @brief Registra una acción crítica en el historial de auditoría.
+ * @param p_user_id Identificador del usuario que realizó la acción.
+ * @param p_action Tipo de acción realizada.
+ * @param p_target Identificador del elemento afectado.
+ * @param p_ip_address Dirección IP del cliente, si está disponible.
+ */
+CREATE PROCEDURE sp_create_audit_log(
+    IN p_user_id INT,
+    IN p_action VARCHAR(50),
+    IN p_target VARCHAR(100),
+    IN p_ip_address VARCHAR(45)
+)
+BEGIN
+    INSERT INTO audit_logs (user_id, action, target, ip_address)
+    VALUES (p_user_id, p_action, p_target, p_ip_address);
+END //
+
 DELIMITER ;
 SET foreign_key_checks = 1;
