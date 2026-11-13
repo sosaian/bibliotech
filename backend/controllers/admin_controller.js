@@ -50,38 +50,46 @@
          try 
          {
              const targetUserId = req.params.id;
-             const adminId = req.userId; 
- 
+             const adminId = req.userId;
+
              // Regla de Negocio Semántica: Evitar auto-eliminación
-             if (targetUserId == adminId) 
+             if (targetUserId == adminId)
              {
                  const message = i18n.getMessage('CT_ADMIN_CANT_DELETE_SELF');
                  return res.status(403).json({ message });
              }
- 
-             // Obtener todos los libros cargados por el usuario objetivo antes de borrarlo
+
+             // Obtener todos los libros cargados por el usuario antes de borrarlo
              const userBooks = await bookRepository.findByUserId(targetUserId);
-             
+
              // Eliminar de la base de datos (se produce cascada a nivel de tabla 'books')
              const success = await userRepository.delete(targetUserId);
- 
-             if (!success) 
+
+             if (!success)
              {
-                 const message = i18n.getMessage('CT_ADMIN_USER_NOT_FOUND');
+                        const message = i18n.getMessage('CT_ADMIN_USER_NOT_FOUND');
                  return res.status(404).json({ message });
              }
 
-             // Crear registro de auditoría en base de datos
+             // Limpieza física: Eliminar almacenamiento en disco
+             const filesDeleted = userBooks.map(book =>
+                 fileHelper.deleteFile(book.file_path)
+             );
+
+             // Comprobar que todos los archivos se hayan eliminado correctamente
+             if (!filesDeleted.every(result => result))
+             {
+                 throw new Error('No se pudieron eliminar todos los archivos físicos del usuario');
+             }
+
+             // Crear registro de auditoría únicamente si todos los borrados tuvieron éxito
              await auditRepository.create({
                  user_id: adminId,
                  action: 'DELETE_USER',
                  target: targetUserId,
                  ip_address: req.ip
              });
- 
-             // Limpieza física: Eliminar almacenamiento en disco
-             userBooks.forEach(book => {fileHelper.deleteFile(book.file_path);});
- 
+
              // Reemplazo dinámico (%s) para mostrar la cantidad de archivos borrados
              const message = i18n.getMessage('CT_ADMIN_USER_DELETED').replace('%s', userBooks.length);
              res.json({ message });

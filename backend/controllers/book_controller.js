@@ -92,26 +92,32 @@
  
              // Obtener información del libro para validar propiedad y conocer ruta física
              const book = await bookRepository.findById(id, userId);
-             
-             if (!book) 
+
+             if (!book)
              {
                  const message = i18n.getMessage('CT_BOOK_NOT_FOUND');
                  return res.status(404).json({ message });
              }
- 
-             // Eliminar registro en base de datos
+
+             // Eliminar registro de la base de datos
              await bookRepository.delete(id, userId);
 
-             // Crea registro de auditoría en base de datos
+             // Eliminar archivo físico
+             const fileDeleted = fileHelper.deleteFile(book.file_path);
+
+             // Confirmar si el libro si borró exitosamente
+             if (!fileDeleted)
+             {
+                 throw new Error('No se pudo eliminar el archivo físico del libro');
+             }
+
+             // Registrar auditoría ÚNICAMENTE si ambas eliminaciones tuvieron éxito
              await auditRepository.create({
                  user_id: userId,
                  action: 'DELETE_BOOK',
                  target: id,
                  ip_address: req.ip
              });
- 
-             // Eliminar archivo físico en disco de forma síncrona
-             fileHelper.deleteFile(book.file_path); 
              
              const message = i18n.getMessage('CT_BOOK_DELETED_SUCCESS');
              res.json({ message });
