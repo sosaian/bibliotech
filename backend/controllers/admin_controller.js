@@ -67,7 +67,7 @@
 
              if (!success)
              {
-                        const message = i18n.getMessage('CT_ADMIN_USER_NOT_FOUND');
+                 const message = i18n.getMessage('CT_ADMIN_USER_NOT_FOUND');
                  return res.status(404).json({ message });
              }
 
