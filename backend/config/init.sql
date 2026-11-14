@@ -81,6 +81,21 @@ CREATE TABLE books (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+/*
+ * @brief Tabla de auditoría de acciones críticas del sistema.
+ * @details Conserva un historial persistente de las operaciones realizadas.
+ * @note user_id no posee FK hacia users para preservar los registros
+ * aunque la cuenta del actor sea eliminada posteriormente.
+ */
+CREATE TABLE audit_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    target VARCHAR(100) NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 7. Inserción de Roles Maestros
 INSERT INTO roles (name) VALUES ('admin'), ('client');
 
@@ -162,6 +177,7 @@ END //
 CREATE PROCEDURE sp_delete_user(IN p_id INT)
 BEGIN
     DELETE FROM users WHERE id = p_id;
+    SELECT ROW_COUNT() AS affectedRows;
 END //
 
 -- --- PROCEDIMIENTOS PARA BOOKS ---
@@ -234,6 +250,24 @@ BEGIN
         category = p_category,
         pages = p_pages
     WHERE id = p_book_id and user_id = p_user_id;
+END //
+
+/**
+ * @brief Registra una acción crítica en el historial de auditoría.
+ * @param p_user_id Identificador del usuario que realizó la acción.
+ * @param p_action Tipo de acción realizada.
+ * @param p_target Identificador del elemento afectado.
+ * @param p_ip_address Dirección IP del cliente, si está disponible.
+ */
+CREATE PROCEDURE sp_create_audit_log(
+    IN p_user_id INT,
+    IN p_action VARCHAR(50),
+    IN p_target VARCHAR(100),
+    IN p_ip_address VARCHAR(45)
+)
+BEGIN
+    INSERT INTO audit_logs (user_id, action, target, ip_address)
+    VALUES (p_user_id, p_action, p_target, p_ip_address);
 END //
 
 DELIMITER ;
