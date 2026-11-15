@@ -201,6 +201,18 @@ END //
 -- --- PROCEDIMIENTOS PARA BOOKS ---
 
 /*
+ * TO-DO: Documentar de manera coherente con el resto del código.
+ */
+CREATE PROCEDURE sp_get_all_categories()
+BEGIN
+    SELECT 
+        id,
+        name
+    FROM categories
+    ORDER BY name ASC;
+END //
+
+/*
  * @brief Registra los metadatos de un archivo PDF subido al servidor.
  */
 CREATE PROCEDURE sp_create_book(
