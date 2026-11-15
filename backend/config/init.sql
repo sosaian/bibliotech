@@ -66,6 +66,14 @@ CREATE TABLE users_roles (
 );
 
 /*
+ * TO-DO: Documentar de manera coherente con el resto del código.
+ */
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+/*
  * @brief 6. Tabla de Libros/Documentos (Relación 1:N con Usuarios)
  */
 CREATE TABLE books (
