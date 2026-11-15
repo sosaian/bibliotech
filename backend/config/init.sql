@@ -118,6 +118,16 @@ INSERT INTO users_roles (user_id, role_id) VALUES (1, 1);
 INSERT INTO users (id, username, password) VALUES (2, 'pepe', '$2b$10$.n0s847tiSxBqDvIo6Vg5ujXC5zIUmm98bTjBWnRdqX9CxxbIo7wS');
 INSERT INTO users_roles (user_id, role_id) VALUES (2, 2); 
 
+/*
+ * TO-DO: Documentar de manera coherente con el resto del código.
+ */
+INSERT INTO categories (name) VALUES
+('Novela'),
+('Ciencia Ficción'),
+('Técnico / Académico'),
+('Historia'),
+('Poesía');
+
 
 /*
  * ==========================================================
