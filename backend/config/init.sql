@@ -222,13 +222,13 @@ CREATE PROCEDURE sp_create_book(
     IN p_filename VARCHAR(255),
     IN p_title VARCHAR(100),
     IN p_author VARCHAR(100),
-    IN p_category VARCHAR(50),
+    IN p_category_id INT,
     IN p_pages INT,
     IN p_file_path VARCHAR(255)
 )
 BEGIN
-    INSERT INTO books (user_id, filename, title, author, category, pages, file_path)
-    VALUES (p_user_id, p_filename, p_title, p_author, p_category, p_pages, p_file_path);
+    INSERT INTO books (user_id, filename, title, author, category_id, pages, file_path)
+    VALUES (p_user_id, p_filename, p_title, p_author, p_category_id, p_pages, p_file_path);
     SELECT LAST_INSERT_ID() as insertId;
 END //
 
