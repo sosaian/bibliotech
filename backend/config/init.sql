@@ -82,11 +82,12 @@ CREATE TABLE books (
     filename VARCHAR(255) NOT NULL,
     title VARCHAR(100) NOT NULL,
     author VARCHAR(100) NOT NULL,
-    category VARCHAR(50),
+    category_id INT NOT NULL,
     pages INT DEFAULT 0,
     file_path VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT
 );
 
 /*
