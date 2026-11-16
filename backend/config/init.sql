@@ -233,9 +233,24 @@ BEGIN
 END //
 
 -- Listar libros asociados a un usuario específico
-CREATE PROCEDURE sp_find_books_by_user(IN p_user_id INT)
+CREATE PROCEDURE sp_find_books_by_user(
+    IN p_user_id INT
+)
 BEGIN
-    SELECT * FROM books WHERE user_id = p_user_id;
+    SELECT
+        books.id,
+        books.user_id,
+        books.filename,
+        books.title,
+        books.author,
+        books.category_id,
+        categories.name AS category,
+        books.pages,
+        books.file_path,
+        books.created_at
+    FROM books 
+    LEFT JOIN categories ON books.category_id = categories.id
+    WHERE books.user_id = p_user_id;
 END //
 
 /*
