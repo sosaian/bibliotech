@@ -122,6 +122,7 @@ INSERT INTO users_roles (user_id, role_id) VALUES (2, 2);
  * TO-DO: Documentar de manera coherente con el resto del código.
  */
 INSERT INTO categories (name) VALUES
+('No especificado'),
 ('Novela'),
 ('Ciencia Ficción'),
 ('Técnico / Académico'),
