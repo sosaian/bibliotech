@@ -139,7 +139,7 @@
         try {
             const {id} = req.params;
             const userId = req.userId;
-            const { title, author, category, pages } = req.body;
+            const { title, author, category_id, pages } = req.body;
             
             const book = await bookRepository.findById(id, userId);
 
@@ -148,7 +148,7 @@
                 return res.status(404).json({message})
             }
 
-            await bookRepository.updateMetadata(id, userId, { title, author, category, pages });
+            await bookRepository.updateMetadata(id, userId, { title, author, category_id, pages });
 
             const message = i18n.getMessage('CT_BOOK_UPDATE');
             return res.status(200).json(message);
