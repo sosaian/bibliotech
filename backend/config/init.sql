@@ -263,7 +263,7 @@ END //
 * @param p_user_id: id del usuario
 * @param p_title: titulo del libro nuevo
 * @param p_author: author nuevo
-* @param p_category: category nuevo
+* @param p_category_id: category_id nuevo
 * @param p_pages: cant de paginas nuevas
 */
 
@@ -272,14 +272,14 @@ CREATE PROCEDURE sp_update_book_metadata(
     IN p_user_id INT,
     IN p_title VARCHAR(100),
     in p_author VARCHAR(100),
-    IN p_category VARCHAR(50),
+    IN p_category_id INT,
     IN p_pages INT 
 )
 BEGIN
     UPDATE books
     set title = p_title,
         author = p_author,
-        category = p_category,
+        category_id = p_category_id,
         pages = p_pages
     WHERE id = p_book_id and user_id = p_user_id;
 END //
