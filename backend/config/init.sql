@@ -258,9 +258,25 @@ END //
  * @note Seguridad: Se exige el p_user_id para evitar que un cliente modifique 
  * un id en la URL y acceda a un libro que no le pertenece (Insecure Direct Object Reference).
  */
-CREATE PROCEDURE sp_find_book_by_id(IN p_id INT, IN p_user_id INT)
+CREATE PROCEDURE sp_find_book_by_id(
+    IN p_id INT, 
+    IN p_user_id INT
+)
 BEGIN
-    SELECT * FROM books WHERE id = p_id AND user_id = p_user_id;
+    SELECT
+        books.id,
+        books.user_id,
+        books.filename,
+        books.title,
+        books.author,
+        books.category_id,
+        categories.name AS category,
+        books.pages,
+        books.file_path,
+        books.created_at
+    FROM books
+    LEFT JOIN categories ON books.category_id = categories.id
+    WHERE books.id = p_id AND books.user_id = p_user_id;
 END //
 
 /*
