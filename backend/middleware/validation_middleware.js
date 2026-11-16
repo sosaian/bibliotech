@@ -83,41 +83,47 @@
       * @param {Object} res - Objeto de respuesta HTTP.
       * @param {Function} next - Función de delegación de Express.
       */
-     validateBookUpload: (req, res, next) => 
-     {
-         const validator = new Validator();
-         const { title, author, category, pages } = req.body;
- 
-         try 
-         {
-             // Validación específica de presencia de archivo. 
-             // Multer procesa el archivo antes que este middleware valide los campos de texto.
-             if (!req.file) 
-             {
-                 throw new Error(validator.i18n.getMessage("CT_FILE_REQUIRED"));
-             }
- 
-             validator.validateThis(title).with(new Required("CT_REQ_TITLE"));
-             validator.validateThis(author).with(new Required("CT_REQ_AUTHOR"));
-             validator.validateThis(category).with(new Required("CT_REQ_CATEGORY"));
-             validator.validateThis(pages).with(new PositiveNumber("CT_PAGES_POSITIVE"));
- 
-             next();
-         } 
-         catch (error) 
-         {
-             /**
-              * @note Rollback de Archivo: Si el archivo fue subido exitosamente a la carpeta temporal 
-              * por Multer, pero los campos de texto fallan la validación, debemos eliminar físicamente 
-              * el archivo huérfano para evitar fugas de almacenamiento (Storage Leaks).
-              */
-             if (req.file) 
-             {
-                 fileHelper.deleteFile(`/uploads/${req.file.filename}`);
-             }
-             return res.status(400).json({ message: error.message });
-         }
-     },
+    validateBookUpload: (req, res, next) => 
+    {
+        const validator = new Validator();
+        const { title, author, category_id, pages } = req.body;
+
+        try 
+        {
+            // Validación específica de presencia de archivo. 
+            // Multer procesa el archivo antes que este middleware valide los campos de texto.
+            if (!req.file) 
+            {
+                throw new Error(validator.i18n.getMessage("CT_FILE_REQUIRED"));
+            }
+
+            validator.validateThis(title).with(new Required("CT_REQ_TITLE"));
+            validator.validateThis(author).with(new Required("CT_REQ_AUTHOR"));
+            validator.validateThis(category_id).with(new Required("CT_REQ_CATEGORY_ID"));
+            validator.validateThis(category_id).with(new PositiveNumber("CT_CATEGORY_ID_POSITIVE"));
+            validator.validateThis(pages).with(new PositiveNumber("CT_PAGES_POSITIVE"));
+
+            if (!Number.isInteger(Number(category_id)))
+            {
+                throw new Error(validator.i18n.getMessage("CT_CATEGORY_ID_INVALID"));
+            }
+
+            next();
+        } 
+        catch (error) 
+        {
+            /**
+             * @note Rollback de Archivo: Si el archivo fue subido exitosamente a la carpeta temporal 
+             * por Multer, pero los campos de texto fallan la validación, debemos eliminar físicamente 
+             * el archivo huérfano para evitar fugas de almacenamiento (Storage Leaks).
+             */
+            if (req.file) 
+            {
+                fileHelper.deleteFile(`/uploads/${req.file.filename}`);
+            }
+            return res.status(400).json({ message: error.message });
+        }
+    },
 
      /*
       * @brief Valida la integridad de los datos para la modificacion de los metadatos de un libro.
