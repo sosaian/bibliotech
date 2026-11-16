@@ -125,22 +125,27 @@
       * @param {Object} res - Objeto de respuesta HTTP.
       * @param {Function} next - Función de delegación de Express.
     */
-     validateBookUpdate: (req, res, next) => {
-
+    validateBookUpdate: (req, res, next) => {
         try {
             const validator = new Validator();
-            const { title, author, category, pages } = req.body;
+            const { title, author, category_id, pages } = req.body;
 
             validator.validateThis(title).with(new Required("CT_REQ_TITLE"));
             validator.validateThis(author).with(new Required("CT_REQ_AUTHOR"));
-            validator.validateThis(category).with(new Required("CT_REQ_CATEGORY"));
+            validator.validateThis(category_id).with(new Required("CT_REQ_CATEGORY_ID"));
+            validator.validateThis(category_id).with(new PositiveNumber("CT_CATEGORY_ID_POSITIVE"));
             validator.validateThis(pages).with(new PositiveNumber("CT_PAGES_POSITIVE"));
 
-            next()
+            if (!Number.isInteger(Number(category_id)))
+            {
+                throw new Error(validator.i18n.getMessage("CT_CATEGORY_ID_INVALID"));
+            }
+
+            next();
         } catch(error){
             res.status(400).json({message: error.message });
         }
-     }
+    }
 
  };
  
