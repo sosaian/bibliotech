@@ -77,3 +77,22 @@
          testUtils.setSuccess(btn);
      }
  });
+
+// 3. Listar Categorías (GET protegido)
+testUtils.createTestButton("Test Categorías de Libros", async (btn) => 
+{
+    await okLogin();
+    const token = localStorage.getItem('test_token');
+    
+    const response = await fetch('/api/categories', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    const data = await response.json();
+    testUtils.log(data);
+    
+    if (response.ok) 
+    {
+        testUtils.setSuccess(btn);
+    }
+});
