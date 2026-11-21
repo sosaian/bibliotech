@@ -187,10 +187,49 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
         return input;
     };
 
+    // Como el input de categorías requiere de obtener resultado de una API dedicada,
+    // usamos una función auxiliar dedicada para manejar cualquier posible error.
+    function createInputCategory(bookCategories, category_id)
+    {
+        const select = document.createElement('select');
+        select.className = 'w3-input w3-border w3-margin-bottom';
+        select.id = 'editCategory';
+        select.required = true;
+        select.disabled = true;
+
+        bookCategories.forEach(category => 
+        {
+            const option = document.createElement('option');
+            option.textContent = category.name;
+            option.value = category.id;
+            option.selected = Number(category.id) === Number(category_id);
+
+            select.appendChild(option);
+        });
+
+        select.value = category_id;
+
+        if (Number(select.value) !== Number(category_id))
+        {
+            const defaultOption = document.createElement('option');
+            defaultOption.textContent = "Categorías no disponibles.";
+            defaultOption.value = "";
+            defaultOption.selected = true;
+            select.appendChild(defaultOption);
+        }
+        else
+        {
+            select.disabled = false;
+        }
+        
+        body.append(select);
+        return select;
+    }
+
     // Creamos los 4 inputs cargados con los datos actuales
     const inputTitle = createInput('Título', 'text', book.title, 'editTitle');
     const inputAuthor = createInput('Autor', 'text', book.author, 'editAuthor');
-    const inputCategory = createInput('Categoría', 'text', book.category, 'editCategory');
+    const inputCategory = createInputCategory(bookCategories, book.category_id);
     const inputPages = createInput('Páginas', 'number', book.pages, 'editPages');
 
     // 5. Footer con botones
@@ -211,7 +250,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
         const updatedData = {
             title: inputTitle.value.trim(),
             author: inputAuthor.value.trim(),
-            category: inputCategory.value.trim(),
+            category_id: Number(inputCategory.value),
             pages: parseInt(inputPages.value)
         };
         
