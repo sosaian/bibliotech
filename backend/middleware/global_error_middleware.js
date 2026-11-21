@@ -42,6 +42,12 @@
              const message = i18n.getMessage('CT_MYSQL_ECONNREFUSED');
              return res.status(500).json({ message });
          }
+
+         if (err.code === 'ER_NO_REFERENCED_ROW_2')
+         {
+            const message = i18n.getMessage('CT_MYSQL_ER_NO_REFERENCED_ROW_2');
+            return res.status(422).json({ message });
+         }
      }
  
      // 2. Errores de la librería de carga de archivos (Multer)
