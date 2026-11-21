@@ -142,6 +142,30 @@
  * @param {Function} onSaveCallback Función a ejecutar cuando el usuario guarde los cambios.
  */
 function showEditBookModal(book, bookCategories, onSaveCallback) {
+    if (!Array.isArray(bookCategories) || bookCategories.length === 0)
+    {
+        showModal(
+            'Error',
+            'No se encuentran disponibles las categorías.'
+        );
+        
+        return;
+    }
+    
+    const categoryExists = bookCategories.some(category =>
+        Number(category.id) === Number(book.category_id)
+    );
+
+    if (!categoryExists)
+    {
+        showModal(
+            'Error',
+            'La categoría asociada al libro no se encuentra disponible.'
+        );
+
+        return;
+    }
+
     // 1. Contenedor principal
     const modal = document.createElement('div');
     modal.className = 'w3-modal';
@@ -195,32 +219,17 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
         select.className = 'w3-input w3-border w3-margin-bottom';
         select.id = 'editCategory';
         select.required = true;
-        select.disabled = true;
 
         bookCategories.forEach(category => 
         {
             const option = document.createElement('option');
             option.textContent = category.name;
             option.value = category.id;
-            option.selected = Number(category.id) === Number(category_id);
 
             select.appendChild(option);
         });
 
-        select.value = category_id;
-
-        if (Number(select.value) !== Number(category_id))
-        {
-            const defaultOption = document.createElement('option');
-            defaultOption.textContent = "Categorías no disponibles.";
-            defaultOption.value = "";
-            defaultOption.selected = true;
-            select.appendChild(defaultOption);
-        }
-        else
-        {
-            select.disabled = false;
-        }
+        select.value = String(category_id);
         
         body.append(select);
         return select;
