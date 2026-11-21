@@ -141,7 +141,7 @@
  * @param {Object} book Objeto con los datos actuales del libro.
  * @param {Function} onSaveCallback Función a ejecutar cuando el usuario guarde los cambios.
  */
-function showEditBookModal(book, onSaveCallback) {
+function showEditBookModal(book, bookCategories, onSaveCallback) {
     // 1. Contenedor principal
     const modal = document.createElement('div');
     modal.className = 'w3-modal';
