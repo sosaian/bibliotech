@@ -66,7 +66,11 @@ CREATE TABLE users_roles (
 );
 
 /*
- * TO-DO: Documentar de manera coherente con el resto del código.
+ * @brief Tabla maestra de categorías disponibles para clasificar libros.
+ * @details Mantiene un catálogo centralizado de categorías que pueden asociarse
+ * a los documentos registrados en la tabla books.
+ * @note La restricción `UNIQUE` sobre `name` evita categorías duplicadas.
+ * La clave foránea en `books` garantiza la integridad referencial.
  */
 CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
