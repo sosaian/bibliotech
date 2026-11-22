@@ -141,7 +141,31 @@
  * @param {Object} book Objeto con los datos actuales del libro.
  * @param {Function} onSaveCallback Función a ejecutar cuando el usuario guarde los cambios.
  */
-function showEditBookModal(book, onSaveCallback) {
+function showEditBookModal(book, bookCategories, onSaveCallback) {
+    if (!Array.isArray(bookCategories) || bookCategories.length === 0)
+    {
+        showModal(
+            'Error',
+            'No se encuentran disponibles las categorías.'
+        );
+        
+        return;
+    }
+    
+    const categoryExists = bookCategories.some(category =>
+        Number(category.id) === Number(book.category_id)
+    );
+
+    if (!categoryExists)
+    {
+        showModal(
+            'Error',
+            'La categoría asociada al libro no se encuentra disponible.'
+        );
+
+        return;
+    }
+
     // 1. Contenedor principal
     const modal = document.createElement('div');
     modal.className = 'w3-modal';
@@ -187,10 +211,34 @@ function showEditBookModal(book, onSaveCallback) {
         return input;
     };
 
+    // Como el input de categorías requiere de obtener resultado de una API dedicada,
+    // usamos una función auxiliar dedicada para manejar cualquier posible error.
+    function createInputCategory(bookCategories, category_id)
+    {
+        const select = document.createElement('select');
+        select.className = 'w3-input w3-border w3-margin-bottom';
+        select.id = 'editCategory';
+        select.required = true;
+
+        bookCategories.forEach(category => 
+        {
+            const option = document.createElement('option');
+            option.textContent = category.name;
+            option.value = category.id;
+
+            select.appendChild(option);
+        });
+
+        select.value = String(category_id);
+        
+        body.append(select);
+        return select;
+    }
+
     // Creamos los 4 inputs cargados con los datos actuales
     const inputTitle = createInput('Título', 'text', book.title, 'editTitle');
     const inputAuthor = createInput('Autor', 'text', book.author, 'editAuthor');
-    const inputCategory = createInput('Categoría', 'text', book.category, 'editCategory');
+    const inputCategory = createInputCategory(bookCategories, book.category_id);
     const inputPages = createInput('Páginas', 'number', book.pages, 'editPages');
 
     // 5. Footer con botones
@@ -211,7 +259,7 @@ function showEditBookModal(book, onSaveCallback) {
         const updatedData = {
             title: inputTitle.value.trim(),
             author: inputAuthor.value.trim(),
-            category: inputCategory.value.trim(),
+            category_id: Number(inputCategory.value),
             pages: parseInt(inputPages.value)
         };
         

@@ -7,7 +7,25 @@
  * @date Octubre 2026
  */
 
- document.addEventListener('DOMContentLoaded', loadBooks);
+let bookCategories;
+
+ document.addEventListener('DOMContentLoaded', async () => {
+    await loadBookCategories();
+    loadBooks();
+ });
+
+async function loadBookCategories() 
+{
+    try 
+    {
+        bookCategories = await apiService.request('/categories', 'GET');
+        renderBookCategoriesList(bookCategories);
+    } 
+    catch (error) 
+    {
+        showModal('Error', 'No se pudieron cargar las categorías: ' + error.message);
+    }
+}
 
  async function loadBooks() 
  {
@@ -75,7 +93,7 @@
          btnEdit.textContent = 'Editar';
          btnEdit.addEventListener('click', () => 
          {
-             showEditBookModal(b, (updatedData) => {
+             showEditBookModal(b, bookCategories, (updatedData) => {
                  updateBook(b.id, updatedData);
              });
          });
@@ -95,6 +113,31 @@
      });
  }
  
+function renderBookCategoriesList(bookCategories)
+{
+    const bookCategoriesSelect = document.getElementById('category');
+    bookCategoriesSelect.replaceChildren();
+
+    bookCategories.forEach(category => 
+    {
+        const bookCategoryOption = document.createElement('option');
+        bookCategoryOption.textContent = category.name;
+        bookCategoryOption.value = category.id;
+        bookCategoryOption.selected = Number(category.id) === 1;
+
+        bookCategoriesSelect.appendChild(bookCategoryOption);
+    });
+
+    bookCategoriesSelect.value = '1';
+
+    if (bookCategoriesSelect.value !== '1')
+    {
+        throw new Error('No se encontró la categoría predeterminada.');
+    }
+
+    bookCategoriesSelect.disabled = false;
+}
+
  async function deleteBook(id) 
  {
      if (!confirm('¿Estás seguro de eliminar este documento de tu biblioteca?')) 
@@ -149,7 +192,7 @@
          const formData = new FormData();
          formData.append('title', document.getElementById('title').value);
          formData.append('author', document.getElementById('author').value);
-         formData.append('category', document.getElementById('category').value);
+         formData.append('category_id', document.getElementById('category').value);
          formData.append('pages', document.getElementById('pages').value);
          
          // files[0] accede al binario crudo del archivo seleccionado en el input de tipo file

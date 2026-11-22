@@ -66,6 +66,18 @@ CREATE TABLE users_roles (
 );
 
 /*
+ * @brief Tabla maestra de categorías disponibles para clasificar libros.
+ * @details Mantiene un catálogo centralizado de categorías que pueden asociarse
+ * a los documentos registrados en la tabla books.
+ * @note La restricción `UNIQUE` sobre `name` evita categorías duplicadas.
+ * La clave foránea en `books` garantiza la integridad referencial.
+ */
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+/*
  * @brief 6. Tabla de Libros/Documentos (Relación 1:N con Usuarios)
  */
 CREATE TABLE books (
@@ -74,11 +86,12 @@ CREATE TABLE books (
     filename VARCHAR(255) NOT NULL,
     title VARCHAR(100) NOT NULL,
     author VARCHAR(100) NOT NULL,
-    category VARCHAR(50),
+    category_id INT NOT NULL,
     pages INT DEFAULT 0,
     file_path VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT
 );
 
 /*
@@ -109,6 +122,21 @@ INSERT INTO users_roles (user_id, role_id) VALUES (1, 1);
 
 INSERT INTO users (id, username, password) VALUES (2, 'pepe', '$2b$10$.n0s847tiSxBqDvIo6Vg5ujXC5zIUmm98bTjBWnRdqX9CxxbIo7wS');
 INSERT INTO users_roles (user_id, role_id) VALUES (2, 2); 
+
+/*
+ * @brief Inserta los datos semilla del catálogo de categorías.
+ * @details Inicializa la tabla `categories` con las categorías disponibles
+ * para clasificar los documentos de la aplicación.
+ * @note La categoría `No especificado` funciona como opción predeterminada
+ * cuando el usuario no desea indicar una clasificación específica.
+ */
+INSERT INTO categories (name) VALUES
+('No especificado'),
+('Novela'),
+('Ciencia Ficción'),
+('Técnico / Académico'),
+('Historia'),
+('Poesía');
 
 
 /*
@@ -183,6 +211,20 @@ END //
 -- --- PROCEDIMIENTOS PARA BOOKS ---
 
 /*
+ * @brief Obtiene todas las categorías disponibles.
+ * @details Consulta el catálogo de categorías y devuelve sus identificadores
+ * y nombres, ordenados alfabéticamente.
+ */
+CREATE PROCEDURE sp_get_all_categories()
+BEGIN
+    SELECT 
+        id,
+        name
+    FROM categories
+    ORDER BY name ASC;
+END //
+
+/*
  * @brief Registra los metadatos de un archivo PDF subido al servidor.
  */
 CREATE PROCEDURE sp_create_book(
@@ -190,20 +232,35 @@ CREATE PROCEDURE sp_create_book(
     IN p_filename VARCHAR(255),
     IN p_title VARCHAR(100),
     IN p_author VARCHAR(100),
-    IN p_category VARCHAR(50),
+    IN p_category_id INT,
     IN p_pages INT,
     IN p_file_path VARCHAR(255)
 )
 BEGIN
-    INSERT INTO books (user_id, filename, title, author, category, pages, file_path)
-    VALUES (p_user_id, p_filename, p_title, p_author, p_category, p_pages, p_file_path);
+    INSERT INTO books (user_id, filename, title, author, category_id, pages, file_path)
+    VALUES (p_user_id, p_filename, p_title, p_author, p_category_id, p_pages, p_file_path);
     SELECT LAST_INSERT_ID() as insertId;
 END //
 
 -- Listar libros asociados a un usuario específico
-CREATE PROCEDURE sp_find_books_by_user(IN p_user_id INT)
+CREATE PROCEDURE sp_find_books_by_user(
+    IN p_user_id INT
+)
 BEGIN
-    SELECT * FROM books WHERE user_id = p_user_id;
+    SELECT
+        books.id,
+        books.user_id,
+        books.filename,
+        books.title,
+        books.author,
+        books.category_id,
+        categories.name AS category,
+        books.pages,
+        books.file_path,
+        books.created_at
+    FROM books 
+    LEFT JOIN categories ON books.category_id = categories.id
+    WHERE books.user_id = p_user_id;
 END //
 
 /*
@@ -211,9 +268,25 @@ END //
  * @note Seguridad: Se exige el p_user_id para evitar que un cliente modifique 
  * un id en la URL y acceda a un libro que no le pertenece (Insecure Direct Object Reference).
  */
-CREATE PROCEDURE sp_find_book_by_id(IN p_id INT, IN p_user_id INT)
+CREATE PROCEDURE sp_find_book_by_id(
+    IN p_id INT, 
+    IN p_user_id INT
+)
 BEGIN
-    SELECT * FROM books WHERE id = p_id AND user_id = p_user_id;
+    SELECT
+        books.id,
+        books.user_id,
+        books.filename,
+        books.title,
+        books.author,
+        books.category_id,
+        categories.name AS category,
+        books.pages,
+        books.file_path,
+        books.created_at
+    FROM books
+    LEFT JOIN categories ON books.category_id = categories.id
+    WHERE books.id = p_id AND books.user_id = p_user_id;
 END //
 
 /*
@@ -225,29 +298,30 @@ BEGIN
 END //
 
 /*
-* @brief actualiza los metadatos del libro de un usuario
-* @details Verifica que el id_book y id_user sea el mismo para poder modificar los metadatos del documento  
-* @param p_book_id: id del libro a modificar
-* @param p_user_id: id del usuario
-* @param p_title: titulo del libro nuevo
-* @param p_author: author nuevo
-* @param p_category: category nuevo
-* @param p_pages: cant de paginas nuevas
-*/
+ * @brief Actualiza los metadatos de un libro perteneciente a un  usuario.
+ * @details Modifica el título, autor, categoría y cantidad de  páginas del
+ * libro, verificando que pertenezca al usuario indicado.
+ * @param p_book_id Identificador del libro a modificar.
+ * @param p_user_id Identificador del usuario propietario del  libro.
+ * @param p_title Nuevo título del libro.
+ * @param p_author Nuevo autor del libro.
+ * @param p_category_id Identificador de la nueva categoría.
+ * @param p_pages Nueva cantidad de páginas.
+ */
 
 CREATE PROCEDURE sp_update_book_metadata(
     IN p_book_id INT,
     IN p_user_id INT,
     IN p_title VARCHAR(100),
     in p_author VARCHAR(100),
-    IN p_category VARCHAR(50),
+    IN p_category_id INT,
     IN p_pages INT 
 )
 BEGIN
     UPDATE books
     set title = p_title,
         author = p_author,
-        category = p_category,
+        category_id = p_category_id,
         pages = p_pages
     WHERE id = p_book_id and user_id = p_user_id;
 END //

@@ -3,6 +3,7 @@
     "CT_INVALID_RESOURCE_CONSTANT": "Recurso de lenguaje inválido o clave inexistente.",
     "CT_MYSQL_ER_DUP_ENTRY": "El nombre de usuario u otra entrada ya está registrada en el sistema.",
     "CT_MYSQL_ECONNREFUSED": "Servicio de base de datos no disponible temporalmente.",
+    "CT_MYSQL_ER_NO_REFERENCED_ROW_2": "La categoría seleccionada no existe o ya no está disponible.",
     "CT_REQ_USERNAME": "El nombre de usuario es obligatorio.",
     "CT_REQ_PASSWORD": "La contraseña es obligatoria.",
     "CT_PASS_TOO_SHORT": "La contraseña debe tener al menos 6 caracteres.",
@@ -28,5 +29,8 @@
     "CT_BOOK_NOT_FOUND": "El documento no existe o no tienes permisos para eliminarlo.",
     "CT_BOOK_DENIED": "Sin permisos para modificar este archivo",
     "CT_BOOK_UPDATE": "Documento actualizado correctamente",
-    "CT_BOOK_DELETED_SUCCESS": "Registro eliminado y archivo físico removido con éxito."
+    "CT_BOOK_DELETED_SUCCESS": "Registro eliminado y archivo físico removido con éxito.",
+    "CT_REQ_CATEGORY_ID": "El identificador de categoría de documento o libro es obligatorio.",
+    "CT_CATEGORY_ID_POSITIVE": "El identificador de categoría de documento o libro tiene que ser un número entero positivo.",
+    "CT_CATEGORY_ID_INVALID": "El identificador de categoría de documento o libro no existe o es inválido."
 }

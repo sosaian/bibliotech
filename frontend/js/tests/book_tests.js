@@ -51,7 +51,7 @@
      const formData = new FormData();
      formData.append('title', 'Don Quijote de la Mancha');
      formData.append('author', 'Miguel de Cervantes');
-     formData.append('category', 'Novela');
+     formData.append('category_id', '1');
      formData.append('pages', '862');
  
      /**
@@ -77,3 +77,58 @@
          testUtils.setSuccess(btn);
      }
  });
+
+// 3. Listar Categorías (GET protegido)
+testUtils.createTestButton("Test Categorías de Libros", async (btn) => 
+{
+    await okLogin();
+    const token = localStorage.getItem('test_token');
+    
+    const response = await fetch('/api/categories', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    const data = await response.json();
+    testUtils.log(data);
+    
+    if (response.ok) 
+    {
+        testUtils.setSuccess(btn);
+    }
+});
+
+// 4. Subir Libro Simulado con categoría inexistente (POST Multipart)
+testUtils.createTestButton("Test Subir Libro PDF con categoría inexistente (Simulado)", async (btn) => 
+{
+    await okLogin();
+    const token = localStorage.getItem('test_token');
+    
+    const formData = new FormData();
+    formData.append('title', 'Don Quijote de la Mancha');
+    formData.append('author', 'Miguel de Cervantes');
+    formData.append('category_id', '999');
+    formData.append('pages', '862');
+
+    /**
+     * @note Técnica de Testing Avanzada: Simulación de archivos en memoria.
+     * En lugar de obligar al tester a seleccionar un archivo físico cada vez,
+     * instanciamos un objeto 'Blob' (Binary Large Object) con una cabecera PDF falsa.
+     * Esto engaña a Multer exitosamente permitiendo automatizar la prueba del endpoint.
+     */
+    const blob = new Blob(["%PDF-1.4 Simulated PDF Document Content"], { type: 'application/pdf' });
+    formData.append('pdfFile', blob, 'don_quijote.pdf');
+
+    const response = await fetch('/api/books/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+    });
+
+    const data = await response.json();
+    testUtils.log(data);
+    
+    if (response.status === 422) 
+    {
+        testUtils.setSuccess(btn);
+    }
+});
