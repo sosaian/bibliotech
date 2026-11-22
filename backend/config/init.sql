@@ -124,7 +124,11 @@ INSERT INTO users (id, username, password) VALUES (2, 'pepe', '$2b$10$.n0s847tiS
 INSERT INTO users_roles (user_id, role_id) VALUES (2, 2); 
 
 /*
- * TO-DO: Documentar de manera coherente con el resto del código.
+ * @brief Inserta los datos semilla del catálogo de categorías.
+ * @details Inicializa la tabla `categories` con las categorías disponibles
+ * para clasificar los documentos de la aplicación.
+ * @note La categoría `No especificado` funciona como opción predeterminada
+ * cuando el usuario no desea indicar una clasificación específica.
  */
 INSERT INTO categories (name) VALUES
 ('No especificado'),
