@@ -3,6 +3,7 @@
     "CT_INVALID_RESOURCE_CONSTANT": "Invalid language resource or missing key.",
     "CT_MYSQL_ER_DUP_ENTRY": "Username or entry is already registered in the system.",
     "CT_MYSQL_ECONNREFUSED": "Database service is temporarily unavailable.",
+    "CT_MYSQL_ER_NO_REFERENCED_ROW_2": "Selected category no longer exists or is temporarily unavailable.",
     "CT_REQ_USERNAME": "Username is required.",
     "CT_REQ_PASSWORD": "Password is required.",
     "CT_PASS_TOO_SHORT": "Password must be at least 6 characters long.",
@@ -26,5 +27,10 @@
     "CT_AUTH_LOGIN_SUCCESS": "Login successful.",
     "CT_BOOK_UPLOAD_SUCCESS": "PDF document successfully uploaded to the library.",
     "CT_BOOK_NOT_FOUND": "The document does not exist or you do not have permission to delete it.",
-    "CT_BOOK_DELETED_SUCCESS": "Record deleted and physical file successfully removed."
+    "CT_BOOK_DENIED": "No permissions to modify this file",
+    "CT_BOOK_UPDATE":"Document updated successfully",
+    "CT_BOOK_DELETED_SUCCESS": "Record deleted and physical file successfully removed.",
+    "CT_REQ_CATEGORY_ID": "You must provide a valid document or book category ID.",
+    "CT_CATEGORY_ID_POSITIVE": "The document or book category ID must be a positive integer number.",
+    "CT_CATEGORY_ID_INVALID": "The document or book category ID does not exist or is invalid."
 }

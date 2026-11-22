@@ -7,7 +7,25 @@
  * @date Octubre 2026
  */
 
- document.addEventListener('DOMContentLoaded', loadBooks);
+let bookCategories;
+
+ document.addEventListener('DOMContentLoaded', async () => {
+    await loadBookCategories();
+    loadBooks();
+ });
+
+async function loadBookCategories() 
+{
+    try 
+    {
+        bookCategories = await apiService.request('/categories', 'GET');
+        renderBookCategoriesList(bookCategories);
+    } 
+    catch (error) 
+    {
+        showModal('Error', 'No se pudieron cargar las categorías: ' + error.message);
+    }
+}
 
  async function loadBooks() 
  {
@@ -68,6 +86,19 @@
          tdReading.appendChild(linkDownload);
  
          const tdActions = document.createElement('td');
+         
+         const btnEdit = document.createElement('button');
+         // Le pongo w3-tiny y w3-round para que sea idéntico a tus otros botones
+         btnEdit.className = 'w3-button w3-orange w3-text-white w3-tiny w3-round w3-margin-right';
+         btnEdit.textContent = 'Editar';
+         btnEdit.addEventListener('click', () => 
+         {
+             showEditBookModal(b, bookCategories, (updatedData) => {
+                 updateBook(b.id, updatedData);
+             });
+         });
+         tdActions.appendChild(btnEdit);
+
          const btnDelete = document.createElement('button');
          btnDelete.className = 'w3-button w3-red w3-tiny w3-round';
          btnDelete.textContent = 'Borrar';
@@ -82,6 +113,31 @@
      });
  }
  
+function renderBookCategoriesList(bookCategories)
+{
+    const bookCategoriesSelect = document.getElementById('category');
+    bookCategoriesSelect.replaceChildren();
+
+    bookCategories.forEach(category => 
+    {
+        const bookCategoryOption = document.createElement('option');
+        bookCategoryOption.textContent = category.name;
+        bookCategoryOption.value = category.id;
+        bookCategoryOption.selected = Number(category.id) === 1;
+
+        bookCategoriesSelect.appendChild(bookCategoryOption);
+    });
+
+    bookCategoriesSelect.value = '1';
+
+    if (bookCategoriesSelect.value !== '1')
+    {
+        throw new Error('No se encontró la categoría predeterminada.');
+    }
+
+    bookCategoriesSelect.disabled = false;
+}
+
  async function deleteBook(id) 
  {
      if (!confirm('¿Estás seguro de eliminar este documento de tu biblioteca?')) 
@@ -100,6 +156,26 @@
          showModal('Error', error.message);
      }
  }
+
+ /**
+ * @brief Envía la solicitud PUT para actualizar los metadatos de un libro.
+ * @param {number} bookId ID del libro a editar.
+ * @param {Object} bookData Objeto con { title, author, category, pages }.
+ */
+ async function updateBook(bookId, bookData) {
+     try {
+        // apiService.request ya maneja el token y ataja errores de red automáticamente
+        const response = await apiService.request(`/books/${bookId}`, 'PUT', bookData);
+        
+        // Usamos la alerta global segura del proyecto
+        showModal('Éxito', response.message || 'Documento actualizado correctamente');
+        
+        // Recargamos la tabla para que el usuario vea los datos nuevos instantáneamente
+        loadBooks();
+     }  catch (error) {
+        showModal('Error al actualizar', error.message);
+     }
+ }
  
  const uploadForm = document.getElementById('uploadForm');
  
@@ -107,39 +183,32 @@
  {
      uploadForm.addEventListener('submit', async (e) => 
      {
-        /**
-         * @see Cancela el evento si este es cancelable, sin detener el 
-         * resto del funcionamiento del evento, es decir, puede ser llamado 
-         * de nuevo. En este caso evita que se envíe el formulario al presionar
-         * el botón de tipo "submit", para poder trabajar previamente con el contenido
-         * del formulario representado por el objeto de tipo FormData()
-         */ 
-        e.preventDefault();
+         e.preventDefault();
          
-        /**
-         * @note Objeto FormData: Esencial para enviar archivos binarios al backend.
-         * Codifica automáticamente los campos en el formato 'multipart/form-data'.
-         */
-        const formData = new FormData();
-        formData.append('title', document.getElementById('title').value);
-        formData.append('author', document.getElementById('author').value);
-        formData.append('category', document.getElementById('category').value);
-        formData.append('pages', document.getElementById('pages').value);
-        
-        // files[0] accede al binario crudo del archivo seleccionado en el input de tipo file
-        formData.append('pdfFile', document.getElementById('pdfFile').files[0]);
-
-        try 
-        {
-            // Pasamos true como cuarto parámetro para indicar que enviamos FormData
-            await apiService.request('/books/upload', 'POST', formData, true);
-            showModal('Éxito', 'Documento guardado e indexado correctamente.');
-            uploadForm.reset();
-            loadBooks();
-        } 
-        catch (error) 
-        {
-            showModal('Error al cargar', error.message);
-        }
+         /**
+          * @note Objeto FormData: Esencial para enviar archivos binarios al backend.
+          * Codifica automáticamente los campos en el formato 'multipart/form-data'.
+          */
+         const formData = new FormData();
+         formData.append('title', document.getElementById('title').value);
+         formData.append('author', document.getElementById('author').value);
+         formData.append('category_id', document.getElementById('category').value);
+         formData.append('pages', document.getElementById('pages').value);
+         
+         // files[0] accede al binario crudo del archivo seleccionado en el input de tipo file
+         formData.append('pdfFile', document.getElementById('pdfFile').files[0]);
+ 
+         try 
+         {
+             // Pasamos true como cuarto parámetro para indicar que enviamos FormData
+             await apiService.request('/books/upload', 'POST', formData, true);
+             showModal('Éxito', 'Documento guardado e indexado correctamente.');
+             uploadForm.reset();
+             loadBooks();
+         } 
+         catch (error) 
+         {
+             showModal('Error al cargar', error.message);
+         }
      });
  }

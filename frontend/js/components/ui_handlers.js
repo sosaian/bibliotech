@@ -135,3 +135,142 @@
      document.getElementById('pdfIframe').src = pdfUrl;
      modal.style.display = 'block';
  }
+
+ /**
+ * @brief Muestra un modal seguro para editar los metadatos de un documento.
+ * @param {Object} book Objeto con los datos actuales del libro.
+ * @param {Function} onSaveCallback Función a ejecutar cuando el usuario guarde los cambios.
+ */
+function showEditBookModal(book, bookCategories, onSaveCallback) {
+    if (!Array.isArray(bookCategories) || bookCategories.length === 0)
+    {
+        showModal(
+            'Error',
+            'No se encuentran disponibles las categorías.'
+        );
+        
+        return;
+    }
+    
+    const categoryExists = bookCategories.some(category =>
+        Number(category.id) === Number(book.category_id)
+    );
+
+    if (!categoryExists)
+    {
+        showModal(
+            'Error',
+            'La categoría asociada al libro no se encuentra disponible.'
+        );
+
+        return;
+    }
+
+    // 1. Contenedor principal
+    const modal = document.createElement('div');
+    modal.className = 'w3-modal';
+    modal.style.display = 'block';
+
+    // 2. Contenido del modal
+    const modalContent = document.createElement('div');
+    modalContent.className = 'w3-modal-content w3-card-4 w3-animate-top';
+    modalContent.style.maxWidth = '500px';
+
+    // 3. Cabecera
+    const header = document.createElement('header');
+    header.className = 'w3-container w3-blue';
+    
+    const closeBtn = document.createElement('span');
+    closeBtn.className = 'w3-button w3-display-topright';
+    closeBtn.textContent = '×';
+    closeBtn.onclick = () => modal.remove();
+    
+    const title = document.createElement('h2');
+    title.textContent = 'Editar Documento';
+    
+    header.append(title, closeBtn);
+
+    // 4. Cuerpo del formulario
+    const body = document.createElement('div');
+    body.className = 'w3-container w3-padding';
+
+    // Función auxiliar para no repetir código creando los inputs
+    const createInput = (labelText, type, value, id) => {
+        const label = document.createElement('label');
+        label.textContent = labelText;
+        label.className = 'w3-text-blue w3-margin-top';
+        label.style.display = 'block';
+        
+        const input = document.createElement('input');
+        input.className = 'w3-input w3-border w3-margin-bottom';
+        input.type = type;
+        input.value = value;
+        input.id = id;
+        
+        body.append(label, input);
+        return input;
+    };
+
+    // Como el input de categorías requiere de obtener resultado de una API dedicada,
+    // usamos una función auxiliar dedicada para manejar cualquier posible error.
+    function createInputCategory(bookCategories, category_id)
+    {
+        const select = document.createElement('select');
+        select.className = 'w3-input w3-border w3-margin-bottom';
+        select.id = 'editCategory';
+        select.required = true;
+
+        bookCategories.forEach(category => 
+        {
+            const option = document.createElement('option');
+            option.textContent = category.name;
+            option.value = category.id;
+
+            select.appendChild(option);
+        });
+
+        select.value = String(category_id);
+        
+        body.append(select);
+        return select;
+    }
+
+    // Creamos los 4 inputs cargados con los datos actuales
+    const inputTitle = createInput('Título', 'text', book.title, 'editTitle');
+    const inputAuthor = createInput('Autor', 'text', book.author, 'editAuthor');
+    const inputCategory = createInputCategory(bookCategories, book.category_id);
+    const inputPages = createInput('Páginas', 'number', book.pages, 'editPages');
+
+    // 5. Footer con botones
+    const footer = document.createElement('footer');
+    footer.className = 'w3-container w3-padding w3-light-grey w3-right-align';
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'w3-button w3-red w3-margin-right';
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.onclick = () => modal.remove();
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'w3-button w3-green';
+    saveBtn.textContent = 'Guardar Cambios';
+    
+    // Lógica al guardar
+    saveBtn.onclick = () => {
+        const updatedData = {
+            title: inputTitle.value.trim(),
+            author: inputAuthor.value.trim(),
+            category_id: Number(inputCategory.value),
+            pages: parseInt(inputPages.value)
+        };
+        
+        onSaveCallback(updatedData); // Ejecutamos la función de actualización
+        modal.remove(); // Cerramos el modal
+    };
+
+    footer.append(cancelBtn, saveBtn);
+
+    // 6. Ensamblaje final
+    modalContent.append(header, body, footer);
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+}
