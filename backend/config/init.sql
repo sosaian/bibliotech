@@ -298,15 +298,16 @@ BEGIN
 END //
 
 /*
-* @brief actualiza los metadatos del libro de un usuario
-* @details Verifica que el id_book y id_user sea el mismo para poder modificar los metadatos del documento  
-* @param p_book_id: id del libro a modificar
-* @param p_user_id: id del usuario
-* @param p_title: titulo del libro nuevo
-* @param p_author: author nuevo
-* @param p_category_id: category_id nuevo
-* @param p_pages: cant de paginas nuevas
-*/
+ * @brief Actualiza los metadatos de un libro perteneciente a un  usuario.
+ * @details Modifica el título, autor, categoría y cantidad de  páginas del
+ * libro, verificando que pertenezca al usuario indicado.
+ * @param p_book_id Identificador del libro a modificar.
+ * @param p_user_id Identificador del usuario propietario del  libro.
+ * @param p_title Nuevo título del libro.
+ * @param p_author Nuevo autor del libro.
+ * @param p_category_id Identificador de la nueva categoría.
+ * @param p_pages Nueva cantidad de páginas.
+ */
 
 CREATE PROCEDURE sp_update_book_metadata(
     IN p_book_id INT,
