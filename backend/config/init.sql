@@ -211,7 +211,9 @@ END //
 -- --- PROCEDIMIENTOS PARA BOOKS ---
 
 /*
- * TO-DO: Documentar de manera coherente con el resto del código.
+ * @brief Obtiene todas las categorías disponibles.
+ * @details Consulta el catálogo de categorías y devuelve sus identificadores
+ * y nombres, ordenados alfabéticamente.
  */
 CREATE PROCEDURE sp_get_all_categories()
 BEGIN
