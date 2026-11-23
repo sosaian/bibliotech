@@ -7,98 +7,98 @@
  * @date Octubre 2026
  */
 
- const userRepository = require('../repositories/user_repository');
- const bookRepository = require('../repositories/book_repository');
- const auditRepository = require('../repositories/audit_repository');
- const fileHelper = require('../utils/file_helper/file_helper');
- const i18n = require('../utils/i18n/i18n'); // Inyección del gestor de idiomas
- 
- /**
-  * @class AdminController
-  * @brief Agrupa la lógica de negocio para operaciones de alto privilegio (Administrador).
-  */
- class AdminController 
- {
-     /**
-      * @brief Obtiene la lista completa de usuarios registrados y sus roles.
-      * @param {Object} req - Petición HTTP.
-      * @param {Object} res - Respuesta HTTP.
-      * @param {Function} next - Función para delegar errores al Global Error Handler.
-      */
-     async getAllUsers(req, res, next)
-     {
-         try 
-         {
-             const users = await userRepository.findAll();
-             res.json(users);
-         }
-         catch (error) 
-         {
-             next(error);
-         }
-     }
- 
-     /**
-      * @brief Elimina un usuario del sistema y realiza una limpieza en cascada 
-      * física de todos los documentos PDF asociados a él.
-      * @param {Object} req - Petición HTTP (espera req.params.id y req.userId).
-      * @param {Object} res - Respuesta HTTP.
-      * @param {Function} next - Función para delegar errores al Global Error Handler.
-      */
-     async deleteUser(req, res, next)
-     {
-         try 
-         {
-             const targetUserId = req.params.id;
-             const adminId = req.userId;
+const userRepository = require('../repositories/user_repository');
+const bookRepository = require('../repositories/book_repository');
+const auditRepository = require('../repositories/audit_repository');
+const fileHelper = require('../utils/file_helper/file_helper');
+const i18n = require('../utils/i18n/i18n'); // Inyección del gestor de idiomas
 
-             // Regla de Negocio Semántica: Evitar auto-eliminación
-             if (targetUserId == adminId)
-             {
-                 const message = i18n.getMessage('CT_ADMIN_CANT_DELETE_SELF');
-                 return res.status(403).json({ message });
-             }
+/**
+ * @class AdminController
+ * @brief Agrupa la lógica de negocio para operaciones de alto privilegio (Administrador).
+ */
+class AdminController 
+{
+    /**
+     * @brief Obtiene la lista completa de usuarios registrados y sus roles.
+     * @param {Object} req - Petición HTTP.
+     * @param {Object} res - Respuesta HTTP.
+     * @param {Function} next - Función para delegar errores al Global Error Handler.
+     */
+    async getAllUsers(req, res, next)
+    {
+        try 
+        {
+            const users = await userRepository.findAll();
+            res.json(users);
+        }
+        catch (error) 
+        {
+            next(error);
+        }
+    }
 
-             // Obtener todos los libros cargados por el usuario antes de borrarlo
-             const userBooks = await bookRepository.findByUserId(targetUserId);
+    /**
+     * @brief Elimina un usuario del sistema y realiza una limpieza en cascada 
+     * física de todos los documentos PDF asociados a él.
+     * @param {Object} req - Petición HTTP (espera req.params.id y req.userId).
+     * @param {Object} res - Respuesta HTTP.
+     * @param {Function} next - Función para delegar errores al Global Error Handler.
+     */
+    async deleteUser(req, res, next)
+    {
+        try 
+        {
+            const targetUserId = req.params.id;
+            const adminId = req.userId;
 
-             // Eliminar de la base de datos (se produce cascada a nivel de tabla 'books')
-             const success = await userRepository.delete(targetUserId);
+            // Regla de Negocio Semántica: Evitar auto-eliminación
+            if (targetUserId == adminId)
+            {
+                const message = i18n.getMessage('CT_ADMIN_CANT_DELETE_SELF');
+                return res.status(403).json({ message });
+            }
 
-             if (!success)
-             {
-                 const message = i18n.getMessage('CT_ADMIN_USER_NOT_FOUND');
-                 return res.status(404).json({ message });
-             }
+            // Obtener todos los libros cargados por el usuario antes de borrarlo
+            const userBooks = await bookRepository.findByUserId(targetUserId);
 
-             // Limpieza física: Eliminar almacenamiento en disco
-             const filesDeleted = userBooks.map(book =>
-                 fileHelper.deleteFile(book.file_path)
-             );
+            // Eliminar de la base de datos (se produce cascada a nivel de tabla 'books')
+            const success = await userRepository.delete(targetUserId);
 
-             // Comprobar que todos los archivos se hayan eliminado correctamente
-             if (!filesDeleted.every(result => result))
-             {
-                 throw new Error('No se pudieron eliminar todos los archivos físicos del usuario');
-             }
+            if (!success)
+            {
+                const message = i18n.getMessage('CT_ADMIN_USER_NOT_FOUND');
+                return res.status(404).json({ message });
+            }
 
-             // Crear registro de auditoría únicamente si todos los borrados tuvieron éxito
-             await auditRepository.create({
-                 user_id: adminId,
-                 action: 'DELETE_USER',
-                 target: targetUserId,
-                 ip_address: req.ip
-             });
+            // Limpieza física: Eliminar almacenamiento en disco
+            const filesDeleted = userBooks.map(book =>
+                fileHelper.deleteFile(book.file_path)
+            );
 
-             // Reemplazo dinámico (%s) para mostrar la cantidad de archivos borrados
-             const message = i18n.getMessage('CT_ADMIN_USER_DELETED').replace('%s', userBooks.length);
-             res.json({ message });
-         } 
-         catch (error) 
-         {
-             next(error);
-         }
-     }
- }
- 
- module.exports = new AdminController();
+            // Comprobar que todos los archivos se hayan eliminado correctamente
+            if (!filesDeleted.every(result => result))
+            {
+                throw new Error('No se pudieron eliminar todos los archivos físicos del usuario');
+            }
+
+            // Crear registro de auditoría únicamente si todos los borrados tuvieron éxito
+            await auditRepository.create({
+                user_id: adminId,
+                action: 'DELETE_USER',
+                target: targetUserId,
+                ip_address: req.ip
+            });
+
+            // Reemplazo dinámico (%s) para mostrar la cantidad de archivos borrados
+            const message = i18n.getMessage('CT_ADMIN_USER_DELETED').replace('%s', userBooks.length);
+            res.json({ message });
+        } 
+        catch (error) 
+        {
+            next(error);
+        }
+    }
+}
+
+module.exports = new AdminController();

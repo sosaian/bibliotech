@@ -7,8 +7,8 @@
  * @date Octubre 2026
  */
 
- class MinLength 
- {
+class MinLength 
+{
     /**
      * @param {number} minLength - Cantidad mínima de caracteres exigidos.
      * @param {string} messageName - Clave del diccionario de traducciones.

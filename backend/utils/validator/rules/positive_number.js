@@ -7,8 +7,8 @@
  * @date Octubre 2026
  */
 
- class PositiveNumber 
- {
+class PositiveNumber 
+{
     constructor(messageName = "CT_POSITIVE_NUMBER") 
     {
         this._messageName = messageName;
