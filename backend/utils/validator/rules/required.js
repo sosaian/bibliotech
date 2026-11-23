@@ -7,8 +7,8 @@
  * @date Octubre 2026
  */
 
- class Required 
- {
+class Required 
+{
     constructor(messageName = "CT_REQUIRED_FIELD") 
     {
         this._messageName = messageName;
