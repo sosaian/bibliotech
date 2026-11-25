@@ -25,6 +25,9 @@ function showModal(title, message)
         modal = document.createElement('div');
         modal.id = 'msgModal';
         modal.className = 'w3-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'modalTitle');
 
         const content = document.createElement('div');
         content.className = 'w3-modal-content w3-card-4 w3-animate-zoom vault-card';
@@ -83,6 +86,9 @@ function showPdfModal(title, pdfUrl)
         modal.id = 'pdfModal';
         modal.className = 'w3-modal';
         modal.style.zIndex = '9999';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'modalTitle');
 
         const content = document.createElement('div');
         content.className = 'w3-modal-content w3-card-4 w3-animate-zoom vault-card';
@@ -99,9 +105,11 @@ function showPdfModal(title, pdfUrl)
 
         // Botón de cerrar posicionado absolutamente. 
         // Zero-innerHTML: Usamos el carácter Unicode '×' nativo en textContent.
-        const btnCloseHeader = document.createElement('span');
+        const btnCloseHeader = document.createElement('button');
+        btnCloseHeader.type = 'button';
         btnCloseHeader.className = 'w3-button w3-display-topright w3-hover-red';
-        btnCloseHeader.textContent = '×'; 
+        btnCloseHeader.textContent = '×';
+        btnCloseHeader.setAttribute('aria-label', 'Cerrar visor PDF');
         btnCloseHeader.style.fontSize = '24px';
         btnCloseHeader.addEventListener('click', () => 
         {
@@ -123,6 +131,7 @@ function showPdfModal(title, pdfUrl)
         iframe.style.width = '100%';
         iframe.style.height = '75vh';
         iframe.style.border = 'none';
+        iframe.title = 'Documento PDF';
         
         bodyDiv.appendChild(iframe);
         content.appendChild(header);
@@ -132,6 +141,7 @@ function showPdfModal(title, pdfUrl)
     }
 
     document.getElementById('pdfModalTitle').textContent = title;
+    document.getElementById('pdfIframe').title = `Documento PDF: ${title}`;
     document.getElementById('pdfIframe').src = pdfUrl;
     modal.style.display = 'block';
 }
@@ -170,6 +180,9 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     const modal = document.createElement('div');
     modal.className = 'w3-modal';
     modal.style.display = 'block';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'editBookModalTitle');
 
     // 2. Contenido del modal
     const modalContent = document.createElement('div');
@@ -180,13 +193,16 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     const header = document.createElement('header');
     header.className = 'w3-container w3-blue';
     
-    const closeBtn = document.createElement('span');
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
     closeBtn.className = 'w3-button w3-display-topright';
     closeBtn.textContent = '×';
+    closeBtn.setAttribute('aria-label', 'Cerrar edición del documento');
     closeBtn.onclick = () => modal.remove();
     
     const title = document.createElement('h2');
     title.textContent = 'Editar Documento';
+    title.id = 'editBookModalTitle';
     
     header.append(title, closeBtn);
 
