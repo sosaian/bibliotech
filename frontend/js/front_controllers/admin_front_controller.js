@@ -45,10 +45,9 @@ function renderUsersTable(users)
         const tdId = document.createElement('td');
         tdId.textContent = u.id;
 
-        const tdUser = document.createElement('td');
-        const boldUser = document.createElement('b');
-        boldUser.textContent = u.username;
-        tdUser.appendChild(boldUser);
+        const tdUser = document.createElement('th');
+        tdUser.scope = 'row';
+        tdUser.textContent = u.username;
 
         const tdRole = document.createElement('td');
         const spanRole = document.createElement('span');
@@ -63,6 +62,7 @@ function renderUsersTable(users)
         const btnDelete = document.createElement('button');
         btnDelete.className = "w3-button w3-red w3-tiny";
         btnDelete.textContent = "Eliminar usuario y sus PDFs";
+        btnDelete.setAttribute('aria-label', `Eliminar usuario ${u.username} y sus PDFs`);
         btnDelete.addEventListener('click', () => 
         {
             deleteUser(u.id);
