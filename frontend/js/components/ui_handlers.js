@@ -218,7 +218,7 @@ function showPdfModal(title, pdfUrl)
         modal.style.zIndex = '9999';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
-        modal.setAttribute('aria-labelledby', 'modalTitle');
+        modal.setAttribute('aria-labelledby', 'pdfModalTitle');
 
         const content = document.createElement('div');
         content.className = 'w3-modal-content w3-card-4 w3-animate-zoom vault-card';
@@ -354,6 +354,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     const createInput = (labelText, type, value, id) => {
         const label = document.createElement('label');
         label.textContent = labelText;
+        label.htmlFor = id;
         label.className = 'w3-text-blue w3-margin-top';
         label.style.display = 'block';
         
@@ -371,6 +372,12 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     // usamos una función auxiliar dedicada para manejar cualquier posible error.
     function createInputCategory(bookCategories, category_id)
     {
+        const label = document.createElement('label');
+        label.textContent = 'Categoría';
+        label.htmlFor = 'editCategory';
+        label.className = 'w3-text-blue w3-margin-top';
+        label.style.display = 'block';
+        
         const select = document.createElement('select');
         select.className = 'w3-input w3-border w3-margin-bottom';
         select.id = 'editCategory';
@@ -387,7 +394,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
 
         select.value = String(category_id);
         
-        body.append(select);
+        body.append(label, select);
         return select;
     }
 
