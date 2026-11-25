@@ -49,10 +49,9 @@ function renderBooksTable(books)
     {
         const row = document.createElement('tr');
 
-        const tdTitle = document.createElement('td');
-        const boldTitle = document.createElement('b');
-        boldTitle.textContent = b.title;
-        tdTitle.appendChild(boldTitle);
+        const tdTitle = document.createElement('th');
+        tdTitle.scope = 'row';
+        tdTitle.textContent = b.title;
         
         const tdAuthor = document.createElement('td');
         tdAuthor.textContent = b.author;
@@ -71,6 +70,7 @@ function renderBooksTable(books)
         const btnView = document.createElement('button');
         btnView.className = 'w3-button w3-teal w3-tiny w3-round w3-margin-right';
         btnView.textContent = 'Visualizar';
+        btnView.setAttribute('aria-label', `Visualizar ${b.title}`);
         btnView.addEventListener('click', () => 
         {
             showPdfModal(b.title, b.file_path);
@@ -83,6 +83,7 @@ function renderBooksTable(books)
         linkDownload.textContent = 'Descargar';
         linkDownload.href = b.file_path;
         linkDownload.setAttribute('download', `${b.title}.pdf`);
+        linkDownload.setAttribute('aria-label', `Descargar ${b.title}`);
         tdReading.appendChild(linkDownload);
 
         const tdActions = document.createElement('td');
@@ -91,6 +92,7 @@ function renderBooksTable(books)
         // Le pongo w3-tiny y w3-round para que sea idéntico a tus otros botones
         btnEdit.className = 'w3-button w3-orange w3-text-white w3-tiny w3-round w3-margin-right';
         btnEdit.textContent = 'Editar';
+        btnEdit.setAttribute('aria-label', `Editar ${b.title}`);
         btnEdit.addEventListener('click', () => 
         {
             showEditBookModal(b, bookCategories, (updatedData) => {
@@ -102,6 +104,7 @@ function renderBooksTable(books)
         const btnDelete = document.createElement('button');
         btnDelete.className = 'w3-button w3-red w3-tiny w3-round';
         btnDelete.textContent = 'Borrar';
+        btnDelete.setAttribute('aria-label', `Borrar ${b.title}`);
         btnDelete.addEventListener('click', () => 
         {
             deleteBook(b.id);

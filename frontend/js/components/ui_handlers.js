@@ -8,6 +8,130 @@
  */
 
 /**
+ * @brief Configura la gestión del foco y teclado de un diálogo modal.
+ * @param {HTMLElement} modal Contenedor del diálogo.
+ * @param {HTMLElement|null} initialFocus Elemento que recibirá el foco inicial.
+ * @param {Function} onClose Función para cerrar el diálogo.
+ */
+function activateModalAccessibility(modal, initialFocus = null, onClose = null)
+{
+    modal._a11yClose = onClose || (() => closeAccessibleModal(modal));
+
+    // Evitamos registrar listeners duplicados si el modal ya está abierto.
+    if (modal._a11yCleanup)
+    {
+        return;
+    }
+
+    const previousFocus = document.activeElement;
+
+    const getFocusableElements = () =>
+    {
+        return Array.from(modal.querySelectorAll(
+            'a[href], button:not([disabled]), input:not([disabled]), ' +
+            'select:not([disabled]), textarea:not([disabled]), iframe, ' +
+            '[tabindex]:not([tabindex="-1"])'
+        )).filter(element =>
+            !element.hasAttribute('hidden') &&
+            element.getAttribute('aria-hidden') !== 'true' &&
+            element.getClientRects().length > 0
+        );
+    };
+
+    const handleKeydown = (event) =>
+    {
+        if (event.key === 'Escape')
+        {
+            event.preventDefault();
+            event.stopPropagation();
+            modal._a11yClose();
+            return;
+        }
+
+        if (event.key !== 'Tab')
+        {
+            return;
+        }
+
+        const focusableElements = getFocusableElements();
+
+        if (focusableElements.length === 0)
+        {
+            event.preventDefault();
+            return;
+        }
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey &&
+            (document.activeElement === firstElement ||
+             !modal.contains(document.activeElement)))
+        {
+            event.preventDefault();
+            lastElement.focus();
+        }
+        else if (!event.shiftKey &&
+            (document.activeElement === lastElement ||
+             !modal.contains(document.activeElement)))
+        {
+            event.preventDefault();
+            firstElement.focus();
+        }
+    };
+
+    // Evita que el foco pueda desplazarse fuera del diálogo.
+    const handleFocusIn = (event) =>
+    {
+        if (!modal.contains(event.target))
+        {
+            const firstElement = getFocusableElements()[0];
+            firstElement?.focus();
+        }
+    };
+
+    modal.addEventListener('keydown', handleKeydown);
+    document.addEventListener('focusin', handleFocusIn);
+
+    // Guardamos la limpieza para ejecutarla al cerrar el modal.
+    modal._a11yCleanup = () =>
+    {
+        modal.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('focusin', handleFocusIn);
+
+        if (previousFocus &&
+            typeof previousFocus.focus === 'function' &&
+            previousFocus.isConnected)
+        {
+            previousFocus.focus();
+        }
+
+        modal._a11yCleanup = null;
+    };
+
+    const target = initialFocus || getFocusableElements()[0];
+    target?.focus();
+}
+
+/**
+ * @brief Cierra un diálogo y restaura el foco anterior.
+ * @param {HTMLElement} modal Contenedor del diálogo.
+ * @param {boolean} remove Indica si también debe eliminarse del DOM.
+ */
+function closeAccessibleModal(modal, remove = false)
+{
+    modal.style.display = 'none';
+
+    if (remove)
+    {
+        modal.remove();
+    }
+
+    modal._a11yCleanup?.();
+    modal._a11yClose = null;
+}
+
+/**
  * @brief Construye y muestra una ventana de diálogo modal informativa.
  * @details Manipulación estricta del DOM: Al usar document.createElement() y textContent, 
  * blindamos la aplicación contra inyección de código (XSS). El texto se renderiza como 
@@ -25,6 +149,9 @@ function showModal(title, message)
         modal = document.createElement('div');
         modal.id = 'msgModal';
         modal.className = 'w3-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'modalTitle');
 
         const content = document.createElement('div');
         content.className = 'w3-modal-content w3-card-4 w3-animate-zoom vault-card';
@@ -48,9 +175,9 @@ function showModal(title, message)
         btnClose.textContent = 'Cerrar';
         
         // Asignación de eventos mediante Listeners (más limpio que usar el atributo onclick en HTML)
-        btnClose.addEventListener('click', () => 
+        btnClose.addEventListener('click', () =>
         {
-            modal.style.display = 'none';
+            modal._a11yClose();
         });
 
         // Ensamblaje del árbol DOM: De adentro hacia afuera
@@ -66,6 +193,12 @@ function showModal(title, message)
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalBody').textContent = message;
     modal.style.display = 'block';
+
+    activateModalAccessibility(
+        modal,
+        null,
+        () => closeAccessibleModal(modal)
+    );
 }
 
 /**
@@ -83,6 +216,9 @@ function showPdfModal(title, pdfUrl)
         modal.id = 'pdfModal';
         modal.className = 'w3-modal';
         modal.style.zIndex = '9999';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'pdfModalTitle');
 
         const content = document.createElement('div');
         content.className = 'w3-modal-content w3-card-4 w3-animate-zoom vault-card';
@@ -99,19 +235,15 @@ function showPdfModal(title, pdfUrl)
 
         // Botón de cerrar posicionado absolutamente. 
         // Zero-innerHTML: Usamos el carácter Unicode '×' nativo en textContent.
-        const btnCloseHeader = document.createElement('span');
+        const btnCloseHeader = document.createElement('button');
+        btnCloseHeader.type = 'button';
         btnCloseHeader.className = 'w3-button w3-display-topright w3-hover-red';
-        btnCloseHeader.textContent = '×'; 
+        btnCloseHeader.textContent = '×';
+        btnCloseHeader.setAttribute('aria-label', 'Cerrar visor PDF');
         btnCloseHeader.style.fontSize = '24px';
-        btnCloseHeader.addEventListener('click', () => 
+        btnCloseHeader.addEventListener('click', () =>
         {
-            modal.style.display = 'none';
-            const iframe = document.getElementById('pdfIframe');
-            // Al vaciar el src, detenemos la descarga en segundo plano del PDF
-            if (iframe) 
-            {
-                iframe.src = '';
-            }
+            modal._a11yClose();
         });
         header.appendChild(btnCloseHeader);
 
@@ -123,6 +255,7 @@ function showPdfModal(title, pdfUrl)
         iframe.style.width = '100%';
         iframe.style.height = '75vh';
         iframe.style.border = 'none';
+        iframe.title = 'Documento PDF';
         
         bodyDiv.appendChild(iframe);
         content.appendChild(header);
@@ -132,8 +265,25 @@ function showPdfModal(title, pdfUrl)
     }
 
     document.getElementById('pdfModalTitle').textContent = title;
+    document.getElementById('pdfIframe').title = `Documento PDF: ${title}`;
     document.getElementById('pdfIframe').src = pdfUrl;
     modal.style.display = 'block';
+
+    activateModalAccessibility(
+        modal,
+        null,
+        () =>
+        {
+            closeAccessibleModal(modal);
+
+            const iframe = document.getElementById('pdfIframe');
+
+            if (iframe)
+            {
+                iframe.src = '';
+            }
+        }
+    );
 }
 
 /**
@@ -170,6 +320,9 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     const modal = document.createElement('div');
     modal.className = 'w3-modal';
     modal.style.display = 'block';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'editBookModalTitle');
 
     // 2. Contenido del modal
     const modalContent = document.createElement('div');
@@ -180,13 +333,16 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     const header = document.createElement('header');
     header.className = 'w3-container w3-blue';
     
-    const closeBtn = document.createElement('span');
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
     closeBtn.className = 'w3-button w3-display-topright';
     closeBtn.textContent = '×';
-    closeBtn.onclick = () => modal.remove();
+    closeBtn.setAttribute('aria-label', 'Cerrar edición del documento');
+    closeBtn.onclick = () => modal._a11yClose();
     
     const title = document.createElement('h2');
     title.textContent = 'Editar Documento';
+    title.id = 'editBookModalTitle';
     
     header.append(title, closeBtn);
 
@@ -198,6 +354,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     const createInput = (labelText, type, value, id) => {
         const label = document.createElement('label');
         label.textContent = labelText;
+        label.htmlFor = id;
         label.className = 'w3-text-blue w3-margin-top';
         label.style.display = 'block';
         
@@ -215,6 +372,12 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     // usamos una función auxiliar dedicada para manejar cualquier posible error.
     function createInputCategory(bookCategories, category_id)
     {
+        const label = document.createElement('label');
+        label.textContent = 'Categoría';
+        label.htmlFor = 'editCategory';
+        label.className = 'w3-text-blue w3-margin-top';
+        label.style.display = 'block';
+        
         const select = document.createElement('select');
         select.className = 'w3-input w3-border w3-margin-bottom';
         select.id = 'editCategory';
@@ -231,7 +394,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
 
         select.value = String(category_id);
         
-        body.append(select);
+        body.append(label, select);
         return select;
     }
 
@@ -248,7 +411,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'w3-button w3-red w3-margin-right';
     cancelBtn.textContent = 'Cancelar';
-    cancelBtn.onclick = () => modal.remove();
+    cancelBtn.onclick = () => modal._a11yClose();
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'w3-button w3-green';
@@ -264,7 +427,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
         };
         
         onSaveCallback(updatedData); // Ejecutamos la función de actualización
-        modal.remove(); // Cerramos el modal
+        modal._a11yClose(); // Cerramos el modal
     };
 
     footer.append(cancelBtn, saveBtn);
@@ -273,4 +436,10 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     modalContent.append(header, body, footer);
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
+
+    activateModalAccessibility(
+        modal,
+        inputTitle,
+        () => closeAccessibleModal(modal, true)
+    );
 }

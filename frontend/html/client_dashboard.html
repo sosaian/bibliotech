@@ -8,6 +8,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bibliotech - Mis Documentos</title>
     <link rel="stylesheet" href="../css/w3.css">
     <link rel="stylesheet" href="../css/style.css">
@@ -15,34 +16,36 @@
 </head>
 <body>
     <!-- Barra de navegación superior -->
-    <div class="w3-bar w3-black w3-border-bottom w3-border-dark-grey">
+    <header class="w3-bar w3-black w3-border-bottom w3-border-dark-grey">
         <span class="w3-bar-item w3-text-teal"><b>BIBLIOTECH</b></span>
         <!-- La clase 'btn-logout' es detectada y enlazada globalmente por auth_helper.js -->
         <button class="w3-bar-item w3-button w3-right btn-logout">Salir</button>
-    </div>
+    </header>
 
-    <div class="w3-container w3-padding-32">
+    <main class="w3-container w3-padding-32">
+        <h1 class="w3-text-white">Mi biblioteca</h1>
+
         <div class="w3-row-padding">
             <!-- Formulario de Subida (Columna izquierda responsiva) -->
             <div class="w3-col l4 m5 s12">
                 <div class="w3-card-4 vault-card w3-padding w3-round">
-                    <h3 class="w3-text-teal">Subir Nuevo PDF</h3>
+                    <h2 class="w3-text-teal">Subir Nuevo PDF</h2>
                     <form id="uploadForm">
-                        <label>Título del Documento</label>
+                        <label for="title">Título del Documento</label>
                         <input class="w3-input w3-border w3-round w3-transparent w3-text-white" type="text" id="title" required>
                         
-                        <label class="w3-margin-top w3-show">Autor</label>
+                        <label for="author" class="w3-margin-top w3-show">Autor</label>
                         <input class="w3-input w3-border w3-round w3-transparent w3-text-white" type="text" id="author" required>
 
-                        <label class="w3-margin-top w3-show">Categoría</label>
+                        <label for="category" class="w3-margin-top w3-show">Categoría</label>
                         <select class="w3-select w3-border w3-round w3-black w3-text-white" id="category" required disabled>
                             <option value="" selected disabled>Cargando categorías...</option>
                         </select>
 
-                        <label class="w3-margin-top w3-show">Páginas</label>
+                        <label for="pages" class="w3-margin-top w3-show">Páginas</label>
                         <input class="w3-input w3-border w3-round w3-transparent w3-text-white" type="number" id="pages" value="10" min="1" required>
 
-                        <label class="w3-margin-top w3-show">Archivo de Documento (.PDF)</label>
+                        <label for="pdfFile" class="w3-margin-top w3-show">Archivo de Documento (.PDF)</label>
                         <input class="w3-input w3-border w3-round" type="file" id="pdfFile" accept="application/pdf" required>
 
                         <button type="submit" class="w3-button w3-teal w3-block w3-round-large w3-margin-top">
@@ -54,17 +57,18 @@
 
             <!-- Listado de Documentos dinámico (Columna derecha) -->
             <div class="w3-col l8 m7 s12">
-                <h3 class="w3-text-white">Mi Biblioteca Privada</h3>
+                <h2 class="w3-text-white">Mi Biblioteca Privada</h2>
                 <div class="w3-responsive">
                     <table class="w3-table w3-striped w3-bordered vault-card">
+                        <caption>Documentos de mi biblioteca privada</caption>
                         <thead>
                             <tr class="w3-teal">
-                                <th>Título</th>
-                                <th>Autor</th>
-                                <th>Categoría</th>
-                                <th>Páginas</th>
-                                <th>Lectura</th>
-                                <th>Acciones</th>
+                                <th scope="col">Título</th>
+                                <th scope="col">Autor</th>
+                                <th scope="col">Categoría</th>
+                                <th scope="col">Páginas</th>
+                                <th scope="col">Lectura</th>
+                                <th scope="col">Acciones</th>
                             </tr>
                         </thead>
                         <!-- Contenedor vacío donde books_front_controller.js inyectará filas <tr> de forma segura -->
@@ -74,7 +78,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script src="../js/services/api_service.js"></script>
     <script src="../js/components/ui_handlers.js"></script>

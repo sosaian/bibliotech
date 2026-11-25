@@ -31,6 +31,11 @@ td
     background-color: #242424;
 }
 
+tbody th
+{
+    background-color: #242424;
+}
+
 /*
  * @note Uso de !important: Justificado únicamente cuando se necesita 
  * sobrescribir forzosamente una regla de alta especificidad de un 
