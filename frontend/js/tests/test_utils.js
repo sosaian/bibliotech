@@ -27,11 +27,20 @@ const testUtils =
         const btn = document.createElement('button');
         btn.textContent = label;
         btn.className = "w3-button w3-block w3-section w3-round w3-grey w3-border w3-border-white w3-left-align";
+
+        const status = document.createElement('span');
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        status.setAttribute('aria-atomic', 'true');
+        status.className = 'w3-small';
+        btn._statusElement = status;
         
         btn.onclick = async () => 
         {
             // Cambio visual a estado "Loading"
-            btn.className = "w3-button w3-block w3-section w3-round w3-yellow"; 
+            btn.className = "w3-button w3-block w3-section w3-round w3-yellow";
+            status.textContent = `Ejecutando: ${label}`;
+            
             try 
             {
                 await testFn(btn);
@@ -41,10 +50,11 @@ const testUtils =
                 this.log("Error de ejecución: " + err.message, true);
                 // Cambio visual a estado "Failed"
                 btn.className = "w3-button w3-block w3-section w3-round w3-red";
+                status.textContent = `Error de ejecución: ${err.message}`;
             }
         };
 
-        document.getElementById('test-container').appendChild(btn);
+        document.getElementById('test-container').appendChild(btn, status);
     },
 
     /**
@@ -77,5 +87,6 @@ const testUtils =
     setSuccess(btn) 
     {
         btn.className = "w3-button w3-block w3-section w3-round w3-green";
+        btn._statusElement.textContent = `Prueba superada: ${btn.textContent}`;
     }
 };
