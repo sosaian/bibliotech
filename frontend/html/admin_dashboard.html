@@ -8,19 +8,20 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bibliotech - Panel de Administración</title>
     <link rel="stylesheet" href="../css/w3.css">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="icon" type="image/png" href="../img/favicon.png">
 </head>
 <body>
-    <div class="w3-bar w3-teal w3-card">
+    <header class="w3-bar w3-teal w3-card">
         <span class="w3-bar-item"><b>CONTROL DE ADMINISTRACIÓN</b></span>
         <button class="w3-bar-item w3-button w3-right btn-logout">Salir</button>
-    </div>
+    </header>
 
-    <div class="w3-container w3-padding-32">
-        <h2 class="w3-text-white">Panel de Clientes Registrados</h2>
+    <main class="w3-container w3-padding-32">
+        <h1 class="w3-text-white">Panel de Clientes Registrados</h1>
         <p>Visualización global del sistema y limpieza de cuentas.</p>
 
         <div class="w3-responsive">
@@ -39,7 +40,7 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </main>
 
     <script src="../js/services/api_service.js"></script>
     <script src="../js/utils/auth_helper.js"></script>
