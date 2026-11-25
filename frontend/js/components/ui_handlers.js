@@ -8,6 +8,130 @@
  */
 
 /**
+ * @brief Configura la gestión del foco y teclado de un diálogo modal.
+ * @param {HTMLElement} modal Contenedor del diálogo.
+ * @param {HTMLElement|null} initialFocus Elemento que recibirá el foco inicial.
+ * @param {Function} onClose Función para cerrar el diálogo.
+ */
+function activateModalAccessibility(modal, initialFocus = null, onClose = null)
+{
+    modal._a11yClose = onClose || (() => closeAccessibleModal(modal));
+
+    // Evitamos registrar listeners duplicados si el modal ya está abierto.
+    if (modal._a11yCleanup)
+    {
+        return;
+    }
+
+    const previousFocus = document.activeElement;
+
+    const getFocusableElements = () =>
+    {
+        return Array.from(modal.querySelectorAll(
+            'a[href], button:not([disabled]), input:not([disabled]), ' +
+            'select:not([disabled]), textarea:not([disabled]), iframe, ' +
+            '[tabindex]:not([tabindex="-1"])'
+        )).filter(element =>
+            !element.hasAttribute('hidden') &&
+            element.getAttribute('aria-hidden') !== 'true' &&
+            element.getClientRects().length > 0
+        );
+    };
+
+    const handleKeydown = (event) =>
+    {
+        if (event.key === 'Escape')
+        {
+            event.preventDefault();
+            event.stopPropagation();
+            modal._a11yClose();
+            return;
+        }
+
+        if (event.key !== 'Tab')
+        {
+            return;
+        }
+
+        const focusableElements = getFocusableElements();
+
+        if (focusableElements.length === 0)
+        {
+            event.preventDefault();
+            return;
+        }
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey &&
+            (document.activeElement === firstElement ||
+             !modal.contains(document.activeElement)))
+        {
+            event.preventDefault();
+            lastElement.focus();
+        }
+        else if (!event.shiftKey &&
+            (document.activeElement === lastElement ||
+             !modal.contains(document.activeElement)))
+        {
+            event.preventDefault();
+            firstElement.focus();
+        }
+    };
+
+    // Evita que el foco pueda desplazarse fuera del diálogo.
+    const handleFocusIn = (event) =>
+    {
+        if (!modal.contains(event.target))
+        {
+            const firstElement = getFocusableElements()[0];
+            firstElement?.focus();
+        }
+    };
+
+    modal.addEventListener('keydown', handleKeydown);
+    document.addEventListener('focusin', handleFocusIn);
+
+    // Guardamos la limpieza para ejecutarla al cerrar el modal.
+    modal._a11yCleanup = () =>
+    {
+        modal.removeEventListener('keydown', handleKeydown);
+        document.removeEventListener('focusin', handleFocusIn);
+
+        if (previousFocus &&
+            typeof previousFocus.focus === 'function' &&
+            previousFocus.isConnected)
+        {
+            previousFocus.focus();
+        }
+
+        modal._a11yCleanup = null;
+    };
+
+    const target = initialFocus || getFocusableElements()[0];
+    target?.focus();
+}
+
+/**
+ * @brief Cierra un diálogo y restaura el foco anterior.
+ * @param {HTMLElement} modal Contenedor del diálogo.
+ * @param {boolean} remove Indica si también debe eliminarse del DOM.
+ */
+function closeAccessibleModal(modal, remove = false)
+{
+    modal.style.display = 'none';
+
+    if (remove)
+    {
+        modal.remove();
+    }
+
+    modal._a11yCleanup?.();
+    modal._a11yClose = null;
+}
+
+/**
  * @brief Construye y muestra una ventana de diálogo modal informativa.
  * @details Manipulación estricta del DOM: Al usar document.createElement() y textContent, 
  * blindamos la aplicación contra inyección de código (XSS). El texto se renderiza como 
@@ -51,9 +175,9 @@ function showModal(title, message)
         btnClose.textContent = 'Cerrar';
         
         // Asignación de eventos mediante Listeners (más limpio que usar el atributo onclick en HTML)
-        btnClose.addEventListener('click', () => 
+        btnClose.addEventListener('click', () =>
         {
-            modal.style.display = 'none';
+            modal._a11yClose();
         });
 
         // Ensamblaje del árbol DOM: De adentro hacia afuera
@@ -69,6 +193,12 @@ function showModal(title, message)
     document.getElementById('modalTitle').textContent = title;
     document.getElementById('modalBody').textContent = message;
     modal.style.display = 'block';
+
+    activateModalAccessibility(
+        modal,
+        null,
+        () => closeAccessibleModal(modal)
+    );
 }
 
 /**
@@ -111,15 +241,9 @@ function showPdfModal(title, pdfUrl)
         btnCloseHeader.textContent = '×';
         btnCloseHeader.setAttribute('aria-label', 'Cerrar visor PDF');
         btnCloseHeader.style.fontSize = '24px';
-        btnCloseHeader.addEventListener('click', () => 
+        btnCloseHeader.addEventListener('click', () =>
         {
-            modal.style.display = 'none';
-            const iframe = document.getElementById('pdfIframe');
-            // Al vaciar el src, detenemos la descarga en segundo plano del PDF
-            if (iframe) 
-            {
-                iframe.src = '';
-            }
+            modal._a11yClose();
         });
         header.appendChild(btnCloseHeader);
 
@@ -144,6 +268,22 @@ function showPdfModal(title, pdfUrl)
     document.getElementById('pdfIframe').title = `Documento PDF: ${title}`;
     document.getElementById('pdfIframe').src = pdfUrl;
     modal.style.display = 'block';
+
+    activateModalAccessibility(
+        modal,
+        null,
+        () =>
+        {
+            closeAccessibleModal(modal);
+
+            const iframe = document.getElementById('pdfIframe');
+
+            if (iframe)
+            {
+                iframe.src = '';
+            }
+        }
+    );
 }
 
 /**
@@ -198,7 +338,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     closeBtn.className = 'w3-button w3-display-topright';
     closeBtn.textContent = '×';
     closeBtn.setAttribute('aria-label', 'Cerrar edición del documento');
-    closeBtn.onclick = () => modal.remove();
+    closeBtn.onclick = () => modal._a11yClose();
     
     const title = document.createElement('h2');
     title.textContent = 'Editar Documento';
@@ -264,7 +404,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'w3-button w3-red w3-margin-right';
     cancelBtn.textContent = 'Cancelar';
-    cancelBtn.onclick = () => modal.remove();
+    cancelBtn.onclick = () => modal._a11yClose();
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'w3-button w3-green';
@@ -280,7 +420,7 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
         };
         
         onSaveCallback(updatedData); // Ejecutamos la función de actualización
-        modal.remove(); // Cerramos el modal
+        modal._a11yClose(); // Cerramos el modal
     };
 
     footer.append(cancelBtn, saveBtn);
@@ -289,4 +429,10 @@ function showEditBookModal(book, bookCategories, onSaveCallback) {
     modalContent.append(header, body, footer);
     modal.appendChild(modalContent);
     document.body.appendChild(modal);
+
+    activateModalAccessibility(
+        modal,
+        inputTitle,
+        () => closeAccessibleModal(modal, true)
+    );
 }
