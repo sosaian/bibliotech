@@ -54,7 +54,7 @@ const testUtils =
             }
         };
 
-        document.getElementById('test-container').appendChild(btn, status);
+        document.getElementById('test-container').append(btn, status);
     },
 
     /**
